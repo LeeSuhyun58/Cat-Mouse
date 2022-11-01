@@ -9,6 +9,9 @@ public class GameManager : MonoBehaviour
 {
     public int stageIndex;
     public CatMove player;
+    public GameObject playerPrefab;
+    //public Transform playerGroup;
+
     public GameObject[] Stages;
 
     //생쥐 채력관리
@@ -16,7 +19,6 @@ public class GameManager : MonoBehaviour
     public int stagePoint;
     public int health;
     public Image[] UIHealth;
-
     public void NextStage(Vector3 pos, string type) // portal Type
     {
 

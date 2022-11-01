@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
-using Photon.Realtime;
+
 using UnityEngine.UI;
 
 public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
@@ -14,6 +14,7 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
     public Rigidbody2D rigid;
     public SpriteRenderer spriteRenderer;
     public Animator anim;
+
     int jumpCount = 2;
 
     public PhotonView PV;
@@ -35,6 +36,17 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
     {
         if (PV.IsMine)
         {
+            //포톤 사용 후 코드 수정
+            float axis = Input.GetAxisRaw("Horizontal");
+            rigid.velocity = new Vector2(4 * axis, rigid.velocity.y);
+
+            if (axis != 0)
+            {
+                anim.SetBool("isMoving", true);
+                PV.RPC("FillpXRPC", RpcTarget.AllBuffered, axis);
+            }
+            else anim.SetBool("isMoving", false);
+
             //Jump -> 2단점프
             if (jumpCount > 0)
             {
@@ -42,11 +54,12 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
                 {
                     rigid.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
                     anim.SetBool("isJumping", true);
+                    PV.RPC("JumpRPC", RpcTarget.All);
                     jumpCount--;
                 }
             }
 
-            if (Input.GetButtonUp("Horizontal")) //버튼에서 손을 때는 경우, 속력을 줄임
+            /*if (Input.GetButtonUp("Horizontal")) //버튼에서 손을 때는 경우, 속력을 줄임
             {
                 rigid.velocity = new Vector2(rigid.velocity.normalized.x * 0.5f, rigid.velocity.y);
             }
@@ -63,9 +76,19 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
                 anim.SetBool("isMoving", false);
             }
             else
-                anim.SetBool("isMoving", true);
+                anim.SetBool("isMoving", true);*/
         }
-       
+
+    }
+
+    [PunRPC]
+    void FillpXRPC(float axis) => spriteRenderer.flipX = axis == -1;
+
+    [PunRPC]
+    void JumpRPC()
+    {
+        rigid.velocity = Vector2.zero;
+        rigid.AddForce(Vector2.up * 1000);
     }
 
     void FixedUpdate()

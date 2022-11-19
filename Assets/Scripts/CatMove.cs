@@ -1,8 +1,12 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
+<<<<<<< HEAD
 using Cinemachine;
+=======
+
+>>>>>>> ef9a3a770f4cb7208dba4c0b13f1cb519dd6cb74
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
@@ -15,7 +19,10 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
     public Rigidbody2D rigid;
     public SpriteRenderer spriteRenderer;
     public Animator anim;
+<<<<<<< HEAD
     //public ChangeScene changescene;
+=======
+>>>>>>> ef9a3a770f4cb7208dba4c0b13f1cb519dd6cb74
 
     int jumpCount = 2;
 

@@ -74,6 +74,8 @@ ScriptsOnlyBuild:
       Script: {instanceID: 0}
     - Class: 61
       Script: {instanceID: 0}
+    - Class: 62
+      Script: {instanceID: 0}
     - Class: 65
       Script: {instanceID: 0}
     - Class: 70
@@ -737,7 +739,7 @@ ScriptsOnlyBuild:
     className: CurrentRoomIsOpenToggle
   - hash:
       serializedVersion: 2
-      Hash: c596e2ca10063190aae85ce829b9a0a0
+      Hash: 23e500d6106390e65ae63133ccf0046a
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: GameManager

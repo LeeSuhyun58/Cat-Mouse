@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
-using Photon.Realtime;
+using Cinemachine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
 {
@@ -14,6 +15,8 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
     public Rigidbody2D rigid;
     public SpriteRenderer spriteRenderer;
     public Animator anim;
+    //public ChangeScene changescene;
+
     int jumpCount = 2;
 
     public PhotonView PV;
@@ -25,16 +28,38 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
         spriteRenderer = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
 
+        gameManager = GameManager.Instance;
+        //DontDestroyOnLoad(gameObject);
+
         jumpCount = 0;
 
         NickNameText.text = PV.IsMine ? PhotonNetwork.NickName : PV.Owner.NickName;
         NickNameText.color = PV.IsMine ? Color.green : Color.red;
+
+        if (PV.IsMine)
+        {
+            // 2D 카메라
+            var CM = GameObject.Find("CMCamera").GetComponent<CinemachineVirtualCamera>();
+            CM.Follow = transform;
+            CM.LookAt = transform;
+        }
     }
 
     private void Update()
     {
         if (PV.IsMine)
         {
+            //포톤 사용 후 코드 수정
+            float axis = Input.GetAxisRaw("Horizontal");
+            rigid.velocity = new Vector2(4 * axis, rigid.velocity.y);
+
+            if (axis != 0)
+            {
+                anim.SetBool("isMoving", true);
+                PV.RPC("FillpXRPC", RpcTarget.AllBuffered, axis);
+            }
+            else anim.SetBool("isMoving", false);
+
             //Jump -> 2단점프
             if (jumpCount > 0)
             {
@@ -42,11 +67,12 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
                 {
                     rigid.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
                     anim.SetBool("isJumping", true);
+                    PV.RPC("JumpRPC", RpcTarget.All);
                     jumpCount--;
                 }
             }
 
-            if (Input.GetButtonUp("Horizontal")) //버튼에서 손을 때는 경우, 속력을 줄임
+            /*if (Input.GetButtonUp("Horizontal")) //버튼에서 손을 때는 경우, 속력을 줄임
             {
                 rigid.velocity = new Vector2(rigid.velocity.normalized.x * 0.5f, rigid.velocity.y);
             }
@@ -63,9 +89,19 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
                 anim.SetBool("isMoving", false);
             }
             else
-                anim.SetBool("isMoving", true);
+                anim.SetBool("isMoving", true);*/
         }
-       
+
+    }
+
+    [PunRPC]
+    void FillpXRPC(float axis) => spriteRenderer.flipX = axis == -1;
+
+    [PunRPC]
+    void JumpRPC()
+    {
+        rigid.velocity = Vector2.zero;
+        rigid.AddForce(Vector2.up * 1000);
     }
 
     void FixedUpdate()
@@ -100,14 +136,13 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
                 }
             }
         }
-        
+
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        // 스테이지 이동(포탈 종류에 따라)
         portal = collision.gameObject.GetComponent<Portal>();
-        
+
         if (collision.gameObject.layer == 10 && rigid.velocity.y < 0)
         {
             switch (portal.type)
@@ -129,7 +164,7 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
                     DoorPortalPlayerReposition(portal.type);
                     break;
 
-                    // 특정 교실 IN
+                // 특정 교실 IN
                 case "InArtRoom":
                     DoorPortalPlayerReposition(portal.type);
                     break;
@@ -160,7 +195,7 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
                     DoorPortalPlayerReposition(portal.type);
                     break;
 
-                    // 특정 교실 OUT
+                // 특정 교실 OUT
                 case "OutArt":
                     DoorPortalPlayerReposition(portal.type);
                     break;
@@ -188,7 +223,7 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
                     break;
                 case "Go4f":
                     Vector3 Go4F = portal.portal.transform.position;
-                    Vector3 Pos4f = new Vector3(Go4F.x -3f, Go4F.y, Go4F.z);
+                    Vector3 Pos4f = new Vector3(Go4F.x - 3f, Go4F.y, Go4F.z);
                     transform.position = Pos4f;
                     break;
                 case "Go5f":
@@ -231,12 +266,20 @@ public class CatMove : MonoBehaviourPunCallbacks, IPunObservable
     void DoorPortalPlayerReposition(string type)
     {
         Vector3 classRoom = portal.portal.transform.position;
-        Vector3 classPos = new Vector3(classRoom.x + 4f, classRoom.y, classRoom.z);
-        gameManager.NextStage(classPos, type);
+        Vector3 classPos = new Vector3(classRoom.x + 5f, classRoom.y, classRoom.z);
+        transform.position = classPos;
+        //gameManager.NextStage(classPos, type);
     }
+
+    /*void floorPortalPlayerReposition(string type)
+    {
+        Vector3 Down5F = portal.portal.transform.position;
+        Vector3 PosDown5f = new Vector3(Down5F.x + 3f, Down5F.y, Down5F.z);
+        transform.position = PosDown5f;
+    }*/
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
-       
+
     }
 }
